@@ -98,10 +98,11 @@ data class GlucoseValue(
         RANDOM,
         UNKNOWN,
         OTTAI,
+        SIBIONIC_GS1_NATIVE,
         SIBIONIC,
+        SIBIONICS,
         SINO,
         SYAI_TAG,
-
         IOB_PREDICTION,
         A_COB_PREDICTION,
         COB_PREDICTION,

@@ -24,7 +24,7 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
-class SyaiPlugin @Inject constructor(
+class SibionicsPlugin @Inject constructor(
     rh: ResourceHelper,
     aapsLogger: AAPSLogger,
     preferences: Preferences
@@ -32,33 +32,31 @@ class SyaiPlugin @Inject constructor(
     PluginDescription()
         .mainType(PluginType.BGSOURCE)
         .fragmentClass(BGSourceFragment::class.java.name)
-        .pluginIcon(app.aaps.core.ui.R.mipmap.ottai_icon)
+        .pluginIcon(app.aaps.core.objects.R.drawable.ic_generic_cgm)
         .preferencesId(PluginDescription.PREFERENCE_SCREEN)
-        .pluginName(R.string.patched_ottai_app)
+        .pluginName(R.string.sibionics)
         .preferencesVisibleInSimpleMode(false)
-        .description(R.string.description_source_patched_ottai_app),
+        .description(R.string.description_source_sibionics),
     ownPreferences = emptyList(),
     aapsLogger, rh, preferences
 ), BgSource {
 
-    override fun advancedFilteringSupported(): Boolean = true
-
-    class SyaiWorker(
+    class SibionicsWorker(
         context: Context,
         params: WorkerParameters
     ) : LoggingWorker(context, params, Dispatchers.IO) {
 
-        @Inject lateinit var syaiPlugin: SyaiPlugin
+        @Inject lateinit var sibionicsPlugin: SibionicsPlugin
         @Inject lateinit var persistenceLayer: PersistenceLayer
 
         @SuppressLint("CheckResult")
         override suspend fun doWorkAndLog(): Result {
             var ret = Result.success()
-            if (!syaiPlugin.isEnabled()) return Result.success(workDataOf("Result" to "Plugin not enabled"))
+            if (!sibionicsPlugin.isEnabled()) return Result.success(workDataOf("Result" to "Plugin not enabled"))
             val collection = inputData.getString("collection") ?: return Result.failure(workDataOf("Error" to "missing collection"))
             if (collection == "entries") {
                 val data = inputData.getString("data")
-                aapsLogger.debug(LTag.BGSOURCE, "Received Syai Data $data")
+                aapsLogger.debug(LTag.BGSOURCE, "Received SIB App Data $data")
                 if (!data.isNullOrEmpty()) {
                     try {
                         val glucoseValues = mutableListOf<GV>()
@@ -73,13 +71,13 @@ class SyaiPlugin @Inject constructor(
                                         raw = null,
                                         noise = null,
                                         trendArrow = TrendArrow.fromString(jsonObject.getString("direction")),
-                                        sourceSensor = SourceSensor.SYAI_TAG
+                                        sourceSensor = SourceSensor.SIBIONICS
                                     )
 
                                 else  -> aapsLogger.debug(LTag.BGSOURCE, "Unknown entries type: $type")
                             }
                         }
-                        persistenceLayer.insertCgmSourceData(Sources.SyaiTag, glucoseValues, emptyList(), null)
+                        persistenceLayer.insertCgmSourceData(Sources.Sibionics, glucoseValues, emptyList(), null)
                             .doOnError { ret = Result.failure(workDataOf("Error" to it.toString())) }
                             .blockingGet()
                     } catch (e: JSONException) {
